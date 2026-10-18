@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 import "@/features/dashboard/dashboard.css";
 export const metadata: Metadata = {
@@ -11,8 +12,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN" className="dark h-full antialiased">
-      <body>{children}</body>
+    <html
+      lang="zh-CN"
+      className="dark h-full antialiased"
+      suppressHydrationWarning
+    >
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

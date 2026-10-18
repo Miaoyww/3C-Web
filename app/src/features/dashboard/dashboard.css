@@ -1,21 +1,59 @@
 /* Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4
- * Genre: modern-minimal · macrostructure: Bento Grid · theme: monochrome (user brief)
+ * Genre: modern-minimal · macrostructure: Bento Grid · theme: neutral with semantic red/green/blue
  * Audience: care staff · use: monitoring and alert triage · nav: N3 side rail · footer: Ft2 inline */
 :root {
   --font-sans: "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
   --font-geist-mono: "Cascadia Code", "Consolas", monospace;
+  --surface-deep: #f1f3f5;
+  --surface-panel: #ffffff;
+  --surface-raised: #f2f3f5;
+  --surface-hover: #e6e8ec;
+  --line-strong: #b9bec7;
+  --map-dot: #18212e12;
+  --ink-faint: #69717d;
+  --ink-soft: #4f5661;
+  --ink-bright: #202226;
+  --shadow-color: #1c24321a;
+  --status-danger: #c72d3b;
+  --status-success: #18794e;
+  --status-info: #245fbe;
+  --status-danger-surface: #c72d3b0a;
+  --status-info-surface: #245fbe0a;
+  --background: #f7f8fa;
+  --foreground: var(--ink-bright);
+  --card: var(--surface-panel);
+  --popover: var(--surface-panel);
+  --primary: #26282d;
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-raised);
+  --muted: var(--surface-raised);
+  --muted-foreground: #626b78;
+  --accent: var(--surface-hover);
+  --accent-foreground: var(--foreground);
+  --border: #dce0e6;
+  --input: #c8ced7;
+  --ring: var(--status-info);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --destructive: var(--status-danger);
+  --chart-2: #69717d;
+}
+.dark {
   --surface-deep: #101112;
   --surface-panel: #17181a;
   --surface-raised: #202123;
   --surface-hover: #2a2b2e;
   --line-strong: #53555a;
   --map-dot: #ffffff0e;
-  --ink-faint: #777a80;
+  --ink-faint: #858991;
   --ink-soft: #b1b3b8;
   --ink-bright: #f1f1f2;
   --shadow-color: #00000055;
-}
-.dark {
+  --status-danger: #f18089;
+  --status-success: #74cba0;
+  --status-info: #83b3fa;
+  --status-danger-surface: #f180890c;
+  --status-info-surface: #83b3fa0a;
   --background: #111214;
   --foreground: var(--ink-bright);
   --card: var(--surface-panel);
@@ -30,7 +68,7 @@
   --border: #2b2c30;
   --input: #3a3b3e;
   --ring: #b5b6bb;
-  --destructive: var(--ink-bright);
+  --destructive: var(--status-danger);
   --chart-2: #82858c;
   --sidebar-primary: var(--ink-bright);
 }
@@ -68,7 +106,7 @@ button:disabled {
   cursor: not-allowed;
 }
 select {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 .dashboard-shell {
   min-height: 100dvh;
@@ -199,7 +237,7 @@ select {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--ink-soft);
+  background: var(--status-success);
   display: inline-block;
   flex-shrink: 0;
 }
@@ -2134,6 +2172,165 @@ h2 {
   }
   .dashboard-footer {
     padding-block: 12px;
+    font-size: 8px;
+  }
+}
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--ink-soft);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--foreground);
+}
+.theme-toggle:disabled {
+  opacity: 0.5;
+}
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+.health-stat .stat-label svg,
+.health-stat .stat-inline-tag {
+  color: var(--status-info);
+}
+.health-stat .mini-progress > span {
+  background: var(--status-info);
+}
+.alert-stat .stat-value > span:first-child,
+.alert-stat .strong,
+.alert-stat .stat-label svg,
+.count-badge {
+  color: var(--status-danger);
+}
+.alert-stat .segments > span.lit {
+  background: var(--status-danger);
+}
+.alert-stat .segments {
+  color: var(--status-danger);
+}
+.alert-stat {
+  background: var(--surface-panel);
+  border-color: var(--line-strong);
+}
+.urgent .alert-symbol {
+  color: var(--status-danger);
+  background: var(--status-danger-surface);
+  border-color: var(--status-danger);
+}
+.urgent .alert-level,
+.device-alert .alert-symbol,
+.device-alert .alert-level {
+  color: var(--status-danger);
+}
+.attention-alert .alert-symbol,
+.attention-alert .alert-level {
+  color: var(--status-info);
+}
+.resolved .alert-symbol,
+.resolved .alert-level,
+.env-status,
+.empty-state > svg {
+  color: var(--status-success);
+}
+.attention-room {
+  background: var(--surface-raised);
+  border-color: var(--status-danger);
+  color: var(--foreground);
+}
+.attention-room .bed-icons {
+  color: var(--ink-faint);
+}
+.attention-room .room-status,
+.attention-room .room-number > svg {
+  color: var(--status-danger);
+}
+.attention-room:hover {
+  background: var(--surface-hover);
+}
+.offline-room {
+  opacity: 1;
+}
+.offline-room .room-status,
+.offline-room .room-number > svg {
+  color: var(--status-danger);
+}
+.room-status::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--status-success);
+}
+.attention-room .room-status::before,
+.offline-room .room-status::before {
+  background: var(--status-danger);
+}
+.legend-square.normal {
+  background: var(--status-success);
+  border-color: var(--status-success);
+}
+.legend-square.attention {
+  background: var(--status-danger);
+  border-color: var(--status-danger);
+}
+.device-offline {
+  color: var(--status-danger);
+}
+.device-dot {
+  background: var(--status-success);
+}
+.care-item > svg {
+  color: var(--status-success);
+}
+.health-service-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 18px 8px;
+  color: var(--muted-foreground);
+  font-size: 8px;
+  line-height: 1.7;
+}
+.service-badge {
+  color: var(--status-info);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--status-info-surface);
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.room-health-note {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.9;
+}
+.chart-legend.solid {
+  background: var(--status-info);
+}
+.chart-legend.dashed {
+  border-color: var(--status-success);
+}
+html[data-magicui-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--magicui-theme-toggle-vt-duration);
+}
+@media (min-width: 1001px) and (max-height: 1100px) {
+  .trend-chart {
+    height: 128px;
+  }
+}
+@media (max-width: 700px) {
+  .health-service-note {
+    margin-inline: 13px;
     font-size: 8px;
   }
 }

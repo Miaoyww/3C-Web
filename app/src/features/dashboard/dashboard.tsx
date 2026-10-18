@@ -21,7 +21,7 @@ import {
   HeartPulse,
   LayoutDashboard,
   Leaf,
-  Maximize2,
+  Minimize2,
   Monitor,
   Pause,
   Play,
@@ -39,6 +39,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,7 @@ import {
   makeTrend,
   seeded,
   devices,
+  healthService,
   type Alert,
 } from "./mock-data";
 import { TrendChart } from "./trend-chart";
@@ -67,7 +69,9 @@ type Room = ReturnType<typeof makeRooms>[number];
 function MetricNumber(props: React.ComponentProps<typeof CountingNumber>) {
   const reducedMotion = useReducedMotion();
   return reducedMotion ? (
-    <span>{props.number.toFixed(props.decimalPlaces ?? 0)}</span>
+    <span data-slot="counting-number">
+      {props.number.toFixed(props.decimalPlaces ?? 0)}
+    </span>
   ) : (
     <CountingNumber {...props} />
   );
@@ -146,6 +150,7 @@ export function Dashboard() {
   const [clock, setClock] = useState<Date | null>(null);
   const [toast, setToast] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const reduceMotion = useReducedMotion();
   const pending = alerts.filter((a) => !a.handled);
   const rooms = useMemo(() => makeRooms(floor, building), [floor, building]);
@@ -166,6 +171,11 @@ export function Dashboard() {
   const occupied = rooms.reduce((total, room) => total + room.occupied, 0);
   const totalOnline = devices.reduce((sum, device) => sum + device.online, 0);
   const totalDevices = devices.reduce((sum, device) => sum + device.total, 0);
+  useEffect(() => {
+    const update = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", update);
+    return () => document.removeEventListener("fullscreenchange", update);
+  }, []);
   useEffect(() => {
     const update = () => setClock(new Date());
     update();
@@ -214,6 +224,9 @@ export function Dashboard() {
     const lines = [
       "类型,项目,数值,说明",
       "概览,在院长者,168,模拟数据",
+      `可选健康服务,自愿付费开通,${healthService.subscribed},模拟数据`,
+      `可选健康服务,已佩戴设备,${healthService.wearing},模拟数据`,
+      `可选健康服务,当前采集人数,${healthService.active},仅含同意采集且已开通并佩戴在线设备者`,
       `概览,待处理预警,${pending.length},模拟数据`,
       `设备,在线设备,${totalOnline}/${totalDevices},模拟数据`,
       ...alerts.map(
@@ -245,7 +258,7 @@ export function Dashboard() {
             {(
               [
                 { id: "overview", icon: LayoutDashboard, label: "运行总览" },
-                { id: "health", icon: HeartPulse, label: "健康趋势" },
+                { id: "health", icon: HeartPulse, label: "自选健康监测" },
                 { id: "rooms", icon: Building2, label: "房间监测" },
                 { id: "alerts", icon: Bell, label: "预警中心" },
                 { id: "devices", icon: Monitor, label: "设备状态" },
@@ -310,11 +323,7 @@ export function Dashboard() {
                     })
                   : "--:--:--"}
               </time>
-              <IconButton
-                icon={Maximize2}
-                label="切换全屏"
-                onClick={fullscreen}
-              />
+              <ThemeToggle />
             </div>
           </header>
           <main>
@@ -343,8 +352,8 @@ export function Dashboard() {
                   导出概览
                 </Button>
                 <Button className="display-button" onClick={fullscreen}>
-                  <Fullscreen />
-                  大屏展示
+                  {isFullscreen ? <Minimize2 /> : <Fullscreen />}
+                  {isFullscreen ? "退出大屏" : "大屏展示"}
                 </Button>
               </div>
             </div>
@@ -385,26 +394,32 @@ export function Dashboard() {
                   <span style={{ width: "65.6%" }} />
                 </div>
               </article>
-              <article className="stat-card">
+              <article className="stat-card health-stat">
                 <div className="stat-label">
-                  健康监测覆盖
+                  自选健康监测
                   <HeartPulse size={17} />
                 </div>
                 <div className="stat-value">
                   <MetricNumber
-                    number={98.8}
-                    decimalPlaces={1}
+                    number={healthService.subscribed}
                     initiallyStable
                   />
-                  <span>%</span>
-                  <span className="stat-inline-tag">持续守护</span>
+                  <span>人开通</span>
+                  <span className="stat-inline-tag">自愿付费</span>
                 </div>
                 <div className="stat-bottom">
-                  <span>166 / 168 人佩戴设备</span>
-                  <span className="tiny-wave">▁▂▁▃▆▂▁▂▅▂▁</span>
+                  <span>
+                    {healthService.wearing} 人佩戴 · {healthService.active}{" "}
+                    人采集中
+                  </span>
+                  <span className="muted">可选服务</span>
                 </div>
                 <div className="mini-progress">
-                  <span style={{ width: "98.8%" }} />
+                  <span
+                    style={{
+                      width: `${(healthService.wearing / healthService.subscribed) * 100}%`,
+                    }}
+                  />
                 </div>
               </article>
               <article className="stat-card alert-stat">
@@ -666,7 +681,7 @@ export function Dashboard() {
                     visibleAlerts.map((alert) => (
                       <button
                         key={alert.id}
-                        className={`alert-item ${alert.level === "紧急" && !alert.handled ? "urgent" : ""}`}
+                        className={`alert-item ${alert.handled ? "resolved" : alert.level === "紧急" ? "urgent" : alert.level === "设备" ? "device-alert" : "attention-alert"}`}
                         onClick={() => setModal({ type: "alert", alert })}
                       >
                         <div className="alert-symbol">
@@ -719,7 +734,7 @@ export function Dashboard() {
             </div>
             <div className="secondary-grid">
               <section className="panel health-panel" id="health">
-                <SectionTitle icon={HeartPulse} title="长者健康趋势">
+                <SectionTitle icon={HeartPulse} title="自选健康监测">
                   <div className="segmented-control">
                     <button
                       className={period === "day" ? "selected" : ""}
@@ -737,6 +752,10 @@ export function Dashboard() {
                     </button>
                   </div>
                 </SectionTitle>
+                <div className="health-service-note">
+                  <span className="service-badge">可选付费服务</span>
+                  <span>自愿开通并同意采集 · 仅记录已佩戴设备者</span>
+                </div>
                 <div className="health-summary">
                   <div>
                     <span className="chart-legend solid" />
@@ -750,7 +769,7 @@ export function Dashboard() {
                     <span>次/分</span>
                   </div>
                   <span className="health-note">
-                    全院佩戴设备长者 · 模拟均值
+                    {healthService.active} 位参与者 · 模拟均值
                   </span>
                 </div>
                 <TrendChart
@@ -929,14 +948,11 @@ export function Dashboard() {
                     </strong>
                   </div>
                   <div>
-                    <span>模拟平均心率</span>
+                    <span>自选服务 · 模拟平均心率</span>
                     <strong>
-                      {modal.building === "A" &&
-                      modal.room.number === "305" &&
-                      roomAlert("305", "A")
-                        ? 106
-                        : modal.room.heartRate}{" "}
-                      次/分
+                      {modal.room.heartRate === null
+                        ? "—"
+                        : `${modal.room.heartRate} 次/分`}
                     </strong>
                   </div>
                   <div>
@@ -944,6 +960,13 @@ export function Dashboard() {
                     <strong>{modal.floor}F 护理站</strong>
                   </div>
                 </div>
+                <p className="room-health-note">
+                  {modal.room.healthActive
+                    ? `本室 ${modal.room.healthActive} 人正在自选健康监测中；未参与者不采集健康数据。`
+                    : modal.room.healthSubscribers
+                      ? "本室已开通服务，但暂无佩戴且在线的设备，不采集健康数据。"
+                      : "本室未开通自选健康监测，不采集健康数据。"}
+                </p>
                 {roomAlert(modal.room.number, modal.building) && (
                   <Button
                     onClick={() =>
@@ -1073,6 +1096,10 @@ export function Dashboard() {
                   此页面是银发经济主题的养老院智能监控原型。可切换楼栋和楼层、点击房间查看模拟读数、处理预警，并导出概览。
                 </p>
                 <div className="help-points">
+                  <p>
+                    <HeartPulse size={16} />
+                    健康监测为自愿付费的可选服务，取得同意且佩戴设备后才记录信息。
+                  </p>
                   <p>
                     <Radio size={16} />
                     所有人员、读数、任务与预警均为模拟数据。

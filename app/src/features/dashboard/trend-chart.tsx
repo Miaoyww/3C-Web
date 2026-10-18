@@ -27,8 +27,8 @@ export function TrendChart({
       role="img"
       aria-label={
         period === "day"
-          ? "今日平均心率与呼吸趋势，模拟数据"
-          : "本周平均心率与呼吸趋势，模拟数据"
+          ? "今日平均心率与呼吸趋势，仅含已同意采集、付费开通且佩戴在线设备的参与者，模拟数据"
+          : "本周平均心率与呼吸趋势，仅含已同意采集、付费开通且佩戴在线设备的参与者，模拟数据"
       }
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
@@ -40,12 +40,12 @@ export function TrendChart({
             <linearGradient id="heart-fill" x1="0" y1="0" x2="0" y2="1">
               <stop
                 offset="0%"
-                stopColor="var(--foreground)"
+                stopColor="var(--status-info)"
                 stopOpacity={0.13}
               />
               <stop
                 offset="100%"
-                stopColor="var(--foreground)"
+                stopColor="var(--status-info)"
                 stopOpacity={0}
               />
             </linearGradient>
@@ -84,7 +84,7 @@ export function TrendChart({
             type="monotone"
             dataKey="heart"
             name="平均心率"
-            stroke="var(--foreground)"
+            stroke="var(--status-info)"
             strokeWidth={2}
             fill="url(#heart-fill)"
             isAnimationActive={!reducedMotion}
@@ -94,7 +94,7 @@ export function TrendChart({
             type="monotone"
             dataKey="breath"
             name="平均呼吸"
-            stroke="var(--chart-2)"
+            stroke="var(--status-success)"
             strokeWidth={1.5}
             strokeDasharray="4 5"
             dot={false}

@@ -61,11 +61,70 @@ export function seeded(seed: number) {
   return value - Math.floor(value);
 }
 
+export type HealthEnrollment = {
+  consented: boolean;
+  paid: boolean;
+  wearing: boolean;
+  online: boolean;
+};
+
+export function canRecordHealth(enrollment: HealthEnrollment) {
+  return (
+    enrollment.consented &&
+    enrollment.paid &&
+    enrollment.wearing &&
+    enrollment.online
+  );
+}
+
+// Simulated subscriptions only: no payment processing or real personal data.
+export const healthResidents = Array.from({ length: 128 }, (_, index) => {
+  const building = index < 64 ? "A" : "B";
+  const floor = Math.floor((index % 64) / 16) + 1;
+  const room = `${floor}${String((index % 16) + 1).padStart(2, "0")}`;
+  const start = Math.floor((index * 168) / 128);
+  const occupied = Math.floor(((index + 1) * 168) / 128) - start;
+  return Array.from({ length: occupied }, (_, person) => {
+    const id = start + person;
+    const rank = (id * 37) % 168;
+    const enrollment = {
+      consented: rank < 72,
+      paid: rank < 72,
+      wearing: rank < 68,
+      online: rank < 66,
+    };
+    return {
+      id,
+      building,
+      floor,
+      room,
+      ...enrollment,
+      heartRate: canRecordHealth(enrollment)
+        ? building === "A" && room === "305"
+          ? 106
+          : Math.round(65 + seeded(id + 4) * 20)
+        : null,
+    };
+  });
+}).flat();
+
+export const activeHealthResidents = healthResidents.filter(canRecordHealth);
+export const healthService = {
+  subscribed: healthResidents.filter((r) => r.paid && r.consented).length,
+  wearing: healthResidents.filter((r) => r.paid && r.consented && r.wearing)
+    .length,
+  active: activeHealthResidents.length,
+};
+
 export function makeRooms(floor: number, building: string) {
   return Array.from({ length: 16 }, (_, i) => {
     const number = `${floor}${String(i + 1).padStart(2, "0")}`;
     const seed = floor * 100 + i + (building === "B" ? 31 : 0);
     const index = (building === "B" ? 64 : 0) + (floor - 1) * 16 + i;
+    const residents = healthResidents.filter(
+      (r) => r.building === building && r.room === number,
+    );
+    const monitored = residents.filter(canRecordHealth);
     return {
       number,
       beds: 2,
@@ -73,7 +132,14 @@ export function makeRooms(floor: number, building: string) {
         Math.floor(((index + 1) * 168) / 128) - Math.floor((index * 168) / 128),
       temperature: +(22 + seeded(seed + 2) * 4).toFixed(1),
       humidity: Math.round(43 + seeded(seed + 3) * 13),
-      heartRate: Math.round(65 + seeded(seed + 4) * 20),
+      healthSubscribers: residents.filter((r) => r.paid && r.consented).length,
+      healthActive: monitored.length,
+      heartRate: monitored.length
+        ? Math.round(
+            monitored.reduce((sum, r) => sum + r.heartRate!, 0) /
+              monitored.length,
+          )
+        : null,
     };
   });
 }
@@ -85,14 +151,29 @@ export function makeTrend(period: "day" | "week", tick: number) {
       period === "day"
         ? `${String(i * 2).padStart(2, "0")}:00`
         : ["周一", "周二", "周三", "周四", "周五", "周六", "周日"][i],
-    heart: Math.round(70 + seeded(i + tick * 13) * 12),
-    breath: Math.round(15 + seeded(i + tick * 13 + 6) * 5),
+    heart: Math.round(
+      activeHealthResidents.reduce(
+        (sum, r) => sum + 65 + seeded(r.id + i + tick * 13) * 20,
+        0,
+      ) / activeHealthResidents.length,
+    ),
+    breath: Math.round(
+      activeHealthResidents.reduce(
+        (sum, r) => sum + 15 + seeded(r.id + i + tick * 13 + 6) * 5,
+        0,
+      ) / activeHealthResidents.length,
+    ),
   }));
 }
 
 export const devices = [
   { name: "智能床垫", online: 178, total: 180, label: "床位感知" },
-  { name: "健康手环", online: 166, total: 168, label: "生命体征" },
+  {
+    name: "健康手环",
+    online: healthService.active,
+    total: healthService.wearing,
+    label: "可选服务 · 已佩戴设备",
+  },
   { name: "环境传感器", online: 94, total: 96, label: "温湿度监测" },
   { name: "毫米波雷达", online: 47, total: 48, label: "行为感知" },
 ];

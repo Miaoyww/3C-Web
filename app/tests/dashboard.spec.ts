@@ -112,6 +112,39 @@ test("dashboard has four coherent summaries and a sixteen-room architectural flo
     page.getByRole("button", { name: /208室/ }),
   ).toHaveAccessibleName(/设备离线/);
 });
+test("comprehensive information screen summarizes facility data and links to exact records", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/screen");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "综合信息屏",
+  );
+  await expect(page.locator(".screen-summary-card")).toHaveCount(4);
+  await expect(page.locator(".screen-floor-row")).toHaveCount(8);
+  await expect(page.locator(".screen-alert-row")).toHaveCount(4);
+  await expect(page.locator(".screen-care-row")).toHaveCount(4);
+  await expect(page.locator(".screen-activity-row")).toHaveCount(6);
+  await expect(page.locator(".screen-offline-row")).toHaveCount(8);
+  await expect(page.locator(".screen-health-totals")).toContainText("66");
+  await page.locator(".screen-alert-row").first().click();
+  await expect(page).toHaveURL(/\/alerts\?alert=AL-001/);
+  await page.goto("/screen");
+  await page.getByRole("link", { name: /YC-E100.*ENV-A-116/ }).click();
+  await expect(page).toHaveURL(/\/devices\?device=ENV-A-116/);
+  await expect(page.getByRole("dialog")).toContainText("环境传感器");
+  for (const width of [320, 375, 414, 768]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/screen");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+      `/screen at ${width}`,
+    ).toBeLessThanOrEqual(width);
+  }
+  expect(errors).toEqual([]);
+});
 test("processing an alert updates dashboard counts and room status across client navigation", async ({
   page,
 }) => {
@@ -271,7 +304,7 @@ test("theme, reduced motion, fullscreen, pause and export remain available", asy
   expect(errors).toEqual([]);
 });
 for (const theme of ["dark", "light"])
-  test(`all five routes remain within the viewport (${theme})`, async ({
+  test(`all six routes remain within the viewport (${theme})`, async ({
     page,
   }) => {
     await page.addInitScript(
@@ -282,6 +315,7 @@ for (const theme of ["dark", "light"])
       await page.setViewportSize({ width, height: width >= 1440 ? 1080 : 900 });
       for (const route of [
         "/",
+        "/screen",
         "/residents",
         "/alerts",
         "/activities",
@@ -314,6 +348,7 @@ test("capture the floorplan, personnel list and alert page", async ({
   await page.addInitScript(() => localStorage.setItem("yian-theme", "light"));
   for (const [route, file] of [
     ["/", "dashboard"],
+    ["/screen", "information-screen"],
     ["/residents", "residents"],
     ["/alerts", "alerts"],
     ["/devices", "devices"],

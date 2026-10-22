@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-22",
+  "framework": "Next.js 16.4 App Router",
+  "fonts": {
+    "body": "system stack: Segoe UI, Microsoft YaHei, PingFang SC, sans-serif",
+    "mono": "Cascadia Code, Consolas, monospace"
+  },
+  "palette": "existing Yian monochrome surfaces with red, green, and blue semantic status tokens in workspace.css",
+  "motion": "motion/react installed; information screen uses only existing transition patterns",
+  "spacing": "existing workspace.css spacing scale and component conventions",
+  "preserve": ["font stack", "palette", "spacing", "existing shell", "existing data model"],
+  "introduce": ["Bento Grid information screen layout"],
+  "sourceFiles": [
+    "app/package.json",
+    "app/src/app/layout.tsx",
+    "app/src/styles/workspace.css"
+  ]
+}

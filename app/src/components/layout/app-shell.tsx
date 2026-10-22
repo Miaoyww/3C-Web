@@ -6,6 +6,7 @@ import {
   Bell,
   CalendarDays,
   LayoutDashboard,
+  LayoutGrid,
   Leaf,
   Monitor,
   Users,
@@ -23,6 +24,7 @@ import { Status } from "@/components/shared/display";
 
 const navigation = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/screen", label: "综合信息屏", icon: LayoutGrid },
   { href: "/residents", label: "人员信息", icon: Users },
   { href: "/alerts", label: "预警监测", icon: Bell },
   { href: "/activities", label: "活动 Dashboard", icon: CalendarDays },
